@@ -37,9 +37,15 @@ uint32_t LongitudeBinary;
 uint16_t altitudeGps;
 uint8_t hdopGps;
 uint8_t sats;
+uint8_t ACC ; 
+uint8_t EventACC ; 
+uint8_t TotalACC ;
+
 
 AXP20X_Class axp2;
 std::queue<String> Queue;
+
+RG15Arduino rg15; 
 
 
 char t[32]; // used to sprintf for Serial output
@@ -76,6 +82,12 @@ uint8_t gps_sats() {
 void gps_setup() {
     _serial_gps.begin(GPS_BAUDRATE, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
 }
+void Rain_setup()
+{
+    myserial.begin(GPS_BAUDRATE, SERIAL_8N1,GPS_RX_PIN, GPS_TX_PIN );
+    rg15.setStream(&myserial) ; 
+    
+}
 
 void gps_loop() {
     while (_serial_gps.available()) {
@@ -89,7 +101,7 @@ void ReadData () {
 #if defined(PAYLOAD_USE_FULL)
 
     // More data than PAYLOAD_USE_CAYENNE
-    void buildPacket(uint8_t txBuffer[30])
+    void buildPacket(uint8_t txBuffer[33])
     {
         LatitudeBinary = ((_gps.location.lat() + 90) / 180.0) * 16777215;
         LongitudeBinary = ((_gps.location.lng() + 180) / 360.0) * 16777215;
@@ -106,7 +118,22 @@ void ReadData () {
        }else {
         Status =0 ; 
        }
-       
+       if(rg15.poll()) {
+            Serial.print("Accumulation: ");
+	        Serial.print(rg15.acc,3);
+	        Serial.print(rg15.unit);
+	        Serial.write(", Event Accumulation: ");
+	        Serial.print(rg15.eventAcc,3);
+	        Serial.print(rg15.unit);
+	        Serial.write(", Total Accumulation: ");
+	        Serial.print(rg15.totalAcc,3);          
+	        Serial.print(rg15.unit);
+	        Serial.write(", IPH: ");
+	        Serial.println(rg15.rInt,3); 
+            ACC = rg15.acc ;
+            EventACC = rg15.eventAcc;
+            TotalACC = rg15.totalAcc;
+    }
        
 
         sprintf(t, "Lat: %f", _gps.location.lat());
@@ -184,21 +211,24 @@ void ReadData () {
         txBuffer[12] = timebinary & 0xFF;
         txBuffer[13] = BatPercentage & 0xFF;
         txBuffer[14] = Status & 0xFF;
-        txBuffer[15] = ( LatB >> 16 ) & 0xFF;
-        txBuffer[16] = ( LatB >> 8 ) & 0xFF;
-        txBuffer[17] = LatB & 0xFF;
-        txBuffer[18] = ( LongB >> 16 ) & 0xFF;
-        txBuffer[19] = ( LongB >> 8 ) & 0xFF;
-        txBuffer[20] = LongB & 0xFF;
-        txBuffer[21] = ( altt >> 8 ) & 0xFF;
-        txBuffer[22] = altt & 0xFF;
-        txBuffer[23] = hdp & 0xFF;
-        txBuffer[24] = sta & 0xFF;
-        txBuffer[25] = (Tb >> 16) & 0xFF;
-        txBuffer[26] = ( Tb >> 8 ) & 0xFF;
-        txBuffer[27] = Tb & 0xFF;
-        txBuffer[28] = BPB & 0xFF;
-        txBuffer[29] = Bs & 0xFF;
+        txBuffer[15] = ACC & 0xFF;
+        txBuffer[16] = EventACC & 0xFF;
+        txBuffer[17] = TotalACC & 0xFF;
+        txBuffer[18] = (LatB >> 16) & 0xFF;
+        txBuffer[19] = (LatB >> 8) & 0xFF;
+        txBuffer[20] = LatB & 0xFF;
+        txBuffer[21] = (LongB >> 16) & 0xFF;
+        txBuffer[22] = (LongB >> 8) & 0xFF;
+        txBuffer[23] = LongB & 0xFF;
+        txBuffer[24] = (altt >> 8) & 0xFF;
+        txBuffer[25] = altt & 0xFF;
+        txBuffer[26] = hdp & 0xFF;
+        txBuffer[27] = sta & 0xFF;
+        txBuffer[28] = (Tb >> 16) & 0xFF;
+        txBuffer[29] = (Tb >> 8) & 0xFF;
+        txBuffer[30] = Tb & 0xFF;
+        txBuffer[31] = BPB & 0xFF;
+        txBuffer[32] = Bs & 0xFF;
         if (LMIC.txrxFlags & TXRX_ACK)
         { 
             Queue.pop();
@@ -223,21 +253,24 @@ void ReadData () {
         txBuffer[12] = timebinary & 0xFF;
         txBuffer[13] = BatPercentage & 0xFF;
         txBuffer[14] = Status & 0xFF;
-        txBuffer[15] =  0 ;
-        txBuffer[16] =  0 ;
-        txBuffer[17] =  0 ;
-        txBuffer[18] =  0;
-        txBuffer[19] =  0;
-        txBuffer[20] =  0;
-        txBuffer[21] =  0;
-        txBuffer[22] =  0;
-        txBuffer[23] =  0;
-        txBuffer[24] =  0;
-        txBuffer[25] =  0;
-        txBuffer[26] =  0;
-        txBuffer[27] =  0;
-        txBuffer[28] =  0;
-        txBuffer[29] =  0;
+        txBuffer[15] = ACC & 0xFF;
+        txBuffer[16] = EventACC & 0xFF;
+        txBuffer[17] = TotalACC & 0xFF;
+        txBuffer[18] = 0;
+        txBuffer[19] = 0;
+        txBuffer[20] = 0;
+        txBuffer[21] = 0;
+        txBuffer[22] = 0;
+        txBuffer[23] = 0;
+        txBuffer[24] = 0;
+        txBuffer[25] = 0;
+        txBuffer[26] = 0;
+        txBuffer[27] = 0;
+        txBuffer[28] = 0;
+        txBuffer[29] = 0;
+        txBuffer[30] = 0;
+        txBuffer[31] = 0;
+        txBuffer[32] = 0;
         }
     }
 

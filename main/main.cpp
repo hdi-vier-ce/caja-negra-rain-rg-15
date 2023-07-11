@@ -67,7 +67,7 @@ void setPmu_irq(bool value){
 
 #if defined(PAYLOAD_USE_FULL)
     // includes number of satellites and accuracy
-    static uint8_t txBuffer[30];
+    static uint8_t txBuffer[33];
 #elif defined(PAYLOAD_USE_CAYENNE)
     // CAYENNE DF
     static uint8_t txBuffer[11] = {0x03, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -385,6 +385,9 @@ void setup()
 
     // Init GPS
     gps_setup();
+    
+    // Init Rain Sensor
+    Rain_setup();
 
     // Show logo on first boot after removing battery
     #ifndef ALWAYS_SHOW_LOGO
